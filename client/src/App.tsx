@@ -1,45 +1,55 @@
-import { useState } from 'react';
-import { JoinForm } from './components/JoinForm';
+import { LoginForm } from './components/LoginForm';
 import { ChatRoom } from './components/ChatRoom';
 import { useSocket } from './hooks/useSocket';
 import './App.css';
 
 function App() {
-  const [currentUser, setCurrentUser] = useState<{ username: string; room: string } | null>(null);
   const { 
     isConnected, 
     messages, 
+    notifications,
     typingUsers, 
-    joinRoom, 
+    user,
+    loginError,
+    login,
+    adminLogin,
+    adminBroadcast,
+    logout,
     sendMessage, 
     startTyping, 
     stopTyping 
   } = useSocket();
 
-  const handleJoin = (username: string, room: string) => {
-    setCurrentUser({ username, room });
-    joinRoom({ username, room });
+  const handleLogin = (username: string) => {
+    login({ username });
   };
 
-  const handleLeave = () => {
-    setCurrentUser(null);
-    // In a real app, you might want to emit a 'leave' event to the server
+  const handleAdminLogin = (username: string, password: string) => {
+    adminLogin({ username, password });
   };
 
-  if (!currentUser) {
-    return <JoinForm onJoin={handleJoin} isConnected={isConnected} />;
+  if (!user) {
+    return (
+      <LoginForm 
+        onLogin={handleLogin} 
+        onAdminLogin={handleAdminLogin}
+        isConnected={isConnected} 
+        loginError={loginError}
+      />
+    );
   }
 
   return (
     <ChatRoom
-      username={currentUser.username}
-      room={currentUser.room}
+      user={user}
       messages={messages}
+      notifications={notifications}
       typingUsers={typingUsers}
       onSendMessage={sendMessage}
+      onAdminBroadcast={adminBroadcast}
       onStartTyping={startTyping}
       onStopTyping={stopTyping}
-      onLeave={handleLeave}
+      onLogout={logout}
     />
   );
 }

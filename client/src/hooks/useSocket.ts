@@ -4,7 +4,11 @@ import {
   ServerToClientEvents, 
   ClientToServerEvents, 
   MessageData,
-  JoinData,
+  LoginData,
+  AdminLoginData,
+  LoginSuccessData,
+  LoginErrorData,
+  NotificationData,
   UserJoinedData,
   UserLeftData,
   TypingData 
@@ -16,7 +20,10 @@ export const useSocket = () => {
   const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<MessageData[]>([]);
+  const [notifications, setNotifications] = useState<NotificationData[]>([]);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [user, setUser] = useState<LoginSuccessData | null>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   useEffect(() => {
     const newSocket = io(SERVER_URL);
@@ -30,6 +37,21 @@ export const useSocket = () => {
     newSocket.on('disconnect', () => {
       setIsConnected(false);
       console.log('Disconnected from server');
+    });
+
+    newSocket.on('loginSuccess', (data: LoginSuccessData) => {
+      setUser(data);
+      setLoginError(null);
+      console.log('Login successful:', data);
+    });
+
+    newSocket.on('loginError', (data: LoginErrorData) => {
+      setLoginError(data.error);
+      console.log('Login error:', data.error);
+    });
+
+    newSocket.on('notification', (data: NotificationData) => {
+      setNotifications(prev => [...prev, data]);
     });
 
     newSocket.on('message', (data: MessageData) => {
@@ -74,12 +96,32 @@ export const useSocket = () => {
     };
   }, []);
 
-  const joinRoom = useCallback((data: JoinData) => {
+  const login = useCallback((data: LoginData) => {
     if (socket) {
-      socket.emit('join', data);
-      setMessages([]); // Clear messages when joining new room
+      setLoginError(null);
+      socket.emit('login', data);
     }
   }, [socket]);
+
+  const adminLogin = useCallback((data: AdminLoginData) => {
+    if (socket) {
+      setLoginError(null);
+      socket.emit('adminLogin', data);
+    }
+  }, [socket]);
+
+  const adminBroadcast = useCallback((message: string) => {
+    if (socket && user?.isAdmin) {
+      socket.emit('adminBroadcast', { message });
+    }
+  }, [socket, user]);
+
+  const logout = useCallback(() => {
+    setUser(null);
+    setMessages([]);
+    setNotifications([]);
+    setLoginError(null);
+  }, []);
 
   const sendMessage = useCallback((message: string) => {
     if (socket) {
@@ -109,8 +151,14 @@ export const useSocket = () => {
     socket,
     isConnected,
     messages,
+    notifications,
     typingUsers,
-    joinRoom,
+    user,
+    loginError,
+    login,
+    adminLogin,
+    adminBroadcast,
+    logout,
     sendMessage,
     startTyping,
     stopTyping

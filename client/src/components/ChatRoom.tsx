@@ -1,29 +1,32 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageData } from '../types/socket.types';
+import { MessageData, NotificationData, LoginSuccessData } from '../types/socket.types';
 import './ChatRoom.css';
 
 interface ChatRoomProps {
-  username: string;
-  room: string;
+  user: LoginSuccessData;
   messages: MessageData[];
+  notifications: NotificationData[];
   typingUsers: string[];
   onSendMessage: (message: string) => void;
+  onAdminBroadcast: (message: string) => void;
   onStartTyping: () => void;
   onStopTyping: () => void;
-  onLeave: () => void;
+  onLogout: () => void;
 }
 
 export const ChatRoom: React.FC<ChatRoomProps> = ({
-  username,
-  room,
+  user,
   messages,
+  notifications,
   typingUsers,
   onSendMessage,
+  onAdminBroadcast,
   onStartTyping,
   onStopTyping,
-  onLeave
+  onLogout
 }) => {
   const [message, setMessage] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
@@ -34,7 +37,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, notifications]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,25 +82,66 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     });
   };
 
-  const filteredTypingUsers = typingUsers.filter(user => user !== username);
+  const handleBroadcast = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (broadcastMessage.trim() && user.isAdmin) {
+      onAdminBroadcast(broadcastMessage.trim());
+      setBroadcastMessage('');
+    }
+  };
+
+  const filteredTypingUsers = typingUsers.filter(typingUser => typingUser !== user.username);
 
   return (
     <div className="chat-container">
       <div className="chat-header">
         <div className="chat-info">
-          <h2>Room: {room}</h2>
-          <p>Welcome, {username}!</p>
+          <h2>Notification Room</h2>
+          <p>Welcome, {user.username}! {user.isAdmin && '(Admin)'}</p>
+          <p>User ID: {user.userId}</p>
         </div>
-        <button onClick={onLeave} className="leave-button">
-          Leave Room
+        <button onClick={onLogout} className="logout-button">
+          Logout
         </button>
       </div>
 
+      {user.isAdmin && (
+        <div className="admin-panel">
+          <h3>Admin Broadcast</h3>
+          <form onSubmit={handleBroadcast} className="broadcast-form">
+            <input
+              type="text"
+              value={broadcastMessage}
+              onChange={(e) => setBroadcastMessage(e.target.value)}
+              placeholder="Enter broadcast message..."
+              className="broadcast-input"
+            />
+            <button type="submit" disabled={!broadcastMessage.trim()} className="broadcast-button">
+              Broadcast
+            </button>
+          </form>
+        </div>
+      )}
+
       <div className="messages-container">
+        {/* Display notifications */}
+        {notifications.map((notification) => (
+          <div key={notification.id} className="notification-message">
+            <div className="notification-header">
+              <span className="notification-label">
+                {notification.isAdmin ? '📢 Admin Broadcast' : '📣 Notification'}
+              </span>
+              <span className="timestamp">{formatTime(notification.timestamp)}</span>
+            </div>
+            <div className="notification-content">{notification.message}</div>
+          </div>
+        ))}
+
+        {/* Display regular messages */}
         {messages.map((msg) => (
           <div 
             key={msg.id} 
-            className={`message ${msg.username === username ? 'own-message' : ''} ${msg.username === 'System' ? 'system-message' : ''}`}
+            className={`message ${msg.username === user.username ? 'own-message' : ''} ${msg.username === 'System' ? 'system-message' : ''}`}
           >
             <div className="message-header">
               <span className="username">{msg.username}</span>
