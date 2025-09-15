@@ -253,3 +253,125 @@
 .messages-container::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+
+/* Room Management Styles */
+.room-management {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  padding: 1rem 1.5rem;
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.subscribed-rooms, .join-room {
+  flex: 1;
+  min-width: 250px;
+}
+
+.subscribed-rooms h3, .join-room h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  color: #495057;
+}
+
+.room-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.room-item {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.room-item.active {
+  background: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.room-button {
+  background: transparent;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #495057;
+  transition: background-color 0.2s;
+}
+
+.room-button:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.room-button:disabled {
+  cursor: default;
+  font-weight: 500;
+  color: #2196f3;
+}
+
+.leave-room-button {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background-color 0.2s;
+}
+
+.leave-room-button:hover {
+  background: #c82333;
+}
+
+.join-room-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.room-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.room-input:focus {
+  border-color: #667eea;
+}
+
+.join-button {
+  padding: 0.5rem 1rem;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
+}
+
+.join-button:hover:not(:disabled) {
+  background: #218838;
+}
+
+.join-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.room-error {
+  margin-top: 0.5rem;
+  color: #dc3545;
+  font-size: 0.85rem;
+  font-weight: 500;
+}

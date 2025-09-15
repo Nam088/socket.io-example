@@ -14,6 +14,7 @@ export class UserService {
       room: NOTIFICATION_ROOM, // All users join the notification room
       joinedAt: Date.now(),
       isAdmin,
+      subscribedRooms: [NOTIFICATION_ROOM], // Start with notification room subscription
     };
 
     this.users.set(socketId, user);
@@ -81,5 +82,57 @@ export class UserService {
 
   getRoom(roomName: string): Room | null {
     return this.rooms.get(roomName) || null;
+  }
+
+  subscribeUserToRoom(socketId: string, roomName: string): boolean {
+    const user = this.users.get(socketId);
+    if (!user) {
+      return false;
+    }
+
+    // Don't allow subscribing to the same room twice
+    if (user.subscribedRooms.includes(roomName)) {
+      return false;
+    }
+
+    // Add room to user's subscribed rooms
+    user.subscribedRooms.push(roomName);
+
+    // Create a temporary user object for this room subscription
+    const roomUser: User = { ...user, room: roomName };
+    this.addUserToRoom(roomUser);
+
+    return true;
+  }
+
+  unsubscribeUserFromRoom(socketId: string, roomName: string): boolean {
+    const user = this.users.get(socketId);
+    if (!user) {
+      return false;
+    }
+
+    // Don't allow unsubscribing from notification room
+    if (roomName === NOTIFICATION_ROOM) {
+      return false;
+    }
+
+    // Remove room from user's subscribed rooms
+    const roomIndex = user.subscribedRooms.indexOf(roomName);
+    if (roomIndex === -1) {
+      return false;
+    }
+
+    user.subscribedRooms.splice(roomIndex, 1);
+
+    // Remove user from the room
+    const roomUser: User = { ...user, room: roomName };
+    this.removeUserFromRoom(roomUser);
+
+    return true;
+  }
+
+  getUserSubscribedRooms(socketId: string): string[] {
+    const user = this.users.get(socketId);
+    return user ? user.subscribedRooms : [];
   }
 }

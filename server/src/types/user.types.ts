@@ -4,6 +4,7 @@ export interface User {
   room: string;
   joinedAt: number;
   isAdmin: boolean;
+  subscribedRooms: string[];
 }
 
 export interface Room {

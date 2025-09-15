@@ -7,10 +7,16 @@ interface ChatRoomProps {
   messages: MessageData[];
   notifications: NotificationData[];
   typingUsers: string[];
-  onSendMessage: (message: string) => void;
+  subscribedRooms: string[];
+  currentRoom: string;
+  roomError: string | null;
+  onSendMessage: (message: string, targetRoom?: string) => void;
   onAdminBroadcast: (message: string) => void;
   onStartTyping: () => void;
   onStopTyping: () => void;
+  onJoinRoom: (roomName: string) => void;
+  onLeaveRoom: (roomName: string) => void;
+  onSwitchRoom: (roomName: string) => void;
   onLogout: () => void;
 }
 
@@ -19,14 +25,21 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   messages,
   notifications,
   typingUsers,
+  subscribedRooms,
+  currentRoom,
+  roomError,
   onSendMessage,
   onAdminBroadcast,
   onStartTyping,
   onStopTyping,
+  onJoinRoom,
+  onLeaveRoom,
+  onSwitchRoom,
   onLogout
 }) => {
   const [message, setMessage] = useState('');
   const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [newRoomName, setNewRoomName] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
@@ -42,7 +55,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim()) {
-      onSendMessage(message.trim());
+      onSendMessage(message.trim(), currentRoom);
       setMessage('');
       handleStopTyping();
     }
@@ -90,19 +103,76 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     }
   };
 
+  const handleJoinRoom = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newRoomName.trim() && !subscribedRooms.includes(newRoomName.trim())) {
+      onJoinRoom(newRoomName.trim());
+      setNewRoomName('');
+    }
+  };
+
   const filteredTypingUsers = typingUsers.filter(typingUser => typingUser !== user.username);
+
+  // Filter messages for current room
+  const currentRoomMessages = messages.filter(msg => msg.room === currentRoom);
 
   return (
     <div className="chat-container">
       <div className="chat-header">
         <div className="chat-info">
-          <h2>Notification Room</h2>
+          <h2>Current Room: {currentRoom}</h2>
           <p>Welcome, {user.username}! {user.isAdmin && '(Admin)'}</p>
           <p>User ID: {user.userId}</p>
         </div>
         <button onClick={onLogout} className="logout-button">
           Logout
         </button>
+      </div>
+
+      {/* Room Management */}
+      <div className="room-management">
+        <div className="subscribed-rooms">
+          <h3>Subscribed Rooms</h3>
+          <div className="room-list">
+            {subscribedRooms.map((room) => (
+              <div key={room} className={`room-item ${room === currentRoom ? 'active' : ''}`}>
+                <button 
+                  onClick={() => onSwitchRoom(room)}
+                  className="room-button"
+                  disabled={room === currentRoom}
+                >
+                  {room}
+                </button>
+                {room !== 'notifications' && (
+                  <button 
+                    onClick={() => onLeaveRoom(room)}
+                    className="leave-room-button"
+                    title="Leave room"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="join-room">
+          <h3>Join New Room</h3>
+          <form onSubmit={handleJoinRoom} className="join-room-form">
+            <input
+              type="text"
+              value={newRoomName}
+              onChange={(e) => setNewRoomName(e.target.value)}
+              placeholder="Enter room name..."
+              className="room-input"
+            />
+            <button type="submit" disabled={!newRoomName.trim()} className="join-button">
+              Join
+            </button>
+          </form>
+          {roomError && <div className="room-error">{roomError}</div>}
+        </div>
       </div>
 
       {user.isAdmin && (
@@ -124,8 +194,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
       )}
 
       <div className="messages-container">
-        {/* Display notifications */}
-        {notifications.map((notification) => (
+        {/* Display notifications only in notifications room */}
+        {currentRoom === 'notifications' && notifications.map((notification) => (
           <div key={notification.id} className="notification-message">
             <div className="notification-header">
               <span className="notification-label">
@@ -137,8 +207,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           </div>
         ))}
 
-        {/* Display regular messages */}
-        {messages.map((msg) => (
+        {/* Display regular messages for current room */}
+        {currentRoomMessages.map((msg) => (
           <div 
             key={msg.id} 
             className={`message ${msg.username === user.username ? 'own-message' : ''} ${msg.username === 'System' ? 'system-message' : ''}`}
@@ -169,7 +239,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
             handleTyping();
           }}
           onBlur={handleStopTyping}
-          placeholder="Type a message..."
+          placeholder={`Type a message in ${currentRoom}...`}
           className="message-input"
           autoFocus
         />

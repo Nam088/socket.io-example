@@ -7,6 +7,9 @@ export interface ServerToClientEvents {
   stopTyping: (data: StopTypingData) => void;
   loginSuccess: (data: LoginSuccessData) => void;
   loginError: (data: LoginErrorData) => void;
+  roomJoined: (data: RoomJoinedData) => void;
+  roomLeft: (data: RoomLeftData) => void;
+  roomError: (data: RoomErrorData) => void;
 }
 
 export interface ClientToServerEvents {
@@ -16,6 +19,8 @@ export interface ClientToServerEvents {
   adminBroadcast: (data: AdminBroadcastData) => void;
   typing: () => void;
   stopTyping: () => void;
+  joinRoom: (data: JoinRoomData) => void;
+  leaveRoom: (data: LeaveRoomData) => void;
 }
 
 export interface MessageData {
@@ -86,4 +91,29 @@ export interface TypingData {
 export interface StopTypingData {
   username: string;
   room: string;
+}
+
+export interface JoinRoomData {
+  roomName: string;
+}
+
+export interface LeaveRoomData {
+  roomName: string;
+}
+
+export interface RoomJoinedData {
+  roomName: string;
+  username: string;
+  message: string;
+}
+
+export interface RoomLeftData {
+  roomName: string;
+  username: string;
+  message: string;
+}
+
+export interface RoomErrorData {
+  error: string;
+  roomName?: string;
 }
