@@ -11,13 +11,19 @@ function App() {
     typingUsers, 
     user,
     loginError,
+    subscribedRooms,
+    currentRoom,
+    roomError,
     login,
     adminLogin,
     adminBroadcast,
     logout,
     sendMessage, 
     startTyping, 
-    stopTyping 
+    stopTyping,
+    joinRoom,
+    leaveRoom,
+    switchRoom
   } = useSocket();
 
   const handleLogin = (username: string) => {
@@ -45,10 +51,16 @@ function App() {
       messages={messages}
       notifications={notifications}
       typingUsers={typingUsers}
+      subscribedRooms={subscribedRooms}
+      currentRoom={currentRoom}
+      roomError={roomError}
       onSendMessage={sendMessage}
       onAdminBroadcast={adminBroadcast}
       onStartTyping={startTyping}
       onStopTyping={stopTyping}
+      onJoinRoom={joinRoom}
+      onLeaveRoom={leaveRoom}
+      onSwitchRoom={switchRoom}
       onLogout={logout}
     />
   );

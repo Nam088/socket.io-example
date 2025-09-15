@@ -11,7 +11,10 @@ import {
   NotificationData,
   UserJoinedData,
   UserLeftData,
-  TypingData 
+  TypingData,
+  RoomJoinedData,
+  RoomLeftData,
+  RoomErrorData 
 } from '../types/socket.types';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
@@ -24,6 +27,9 @@ export const useSocket = () => {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [user, setUser] = useState<LoginSuccessData | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [subscribedRooms, setSubscribedRooms] = useState<string[]>([]);
+  const [currentRoom, setCurrentRoom] = useState<string>('notifications');
+  const [roomError, setRoomError] = useState<string | null>(null);
 
   useEffect(() => {
     const newSocket = io(SERVER_URL);
@@ -42,6 +48,8 @@ export const useSocket = () => {
     newSocket.on('loginSuccess', (data: LoginSuccessData) => {
       setUser(data);
       setLoginError(null);
+      setSubscribedRooms(['notifications']); // Start with notification room
+      setCurrentRoom('notifications');
       console.log('Login successful:', data);
     });
 
@@ -91,6 +99,31 @@ export const useSocket = () => {
       setTypingUsers(prev => prev.filter(user => user !== data.username));
     });
 
+    newSocket.on('roomJoined', (data: RoomJoinedData) => {
+      setSubscribedRooms(prev => {
+        if (!prev.includes(data.roomName)) {
+          return [...prev, data.roomName];
+        }
+        return prev;
+      });
+      setRoomError(null);
+      console.log(`Joined room: ${data.roomName}`);
+    });
+
+    newSocket.on('roomLeft', (data: RoomLeftData) => {
+      setSubscribedRooms(prev => prev.filter(room => room !== data.roomName));
+      if (currentRoom === data.roomName) {
+        setCurrentRoom('notifications'); // Switch back to notifications
+      }
+      setRoomError(null);
+      console.log(`Left room: ${data.roomName}`);
+    });
+
+    newSocket.on('roomError', (data: RoomErrorData) => {
+      setRoomError(data.error);
+      console.log('Room error:', data.error);
+    });
+
     return () => {
       newSocket.disconnect();
     };
@@ -121,19 +154,22 @@ export const useSocket = () => {
     setMessages([]);
     setNotifications([]);
     setLoginError(null);
+    setSubscribedRooms([]);
+    setCurrentRoom('notifications');
+    setRoomError(null);
   }, []);
 
-  const sendMessage = useCallback((message: string) => {
+  const sendMessage = useCallback((message: string, targetRoom?: string) => {
     if (socket) {
       socket.emit('message', {
         id: '',
         message,
         username: '',
         timestamp: Date.now(),
-        room: ''
+        room: targetRoom || currentRoom
       });
     }
-  }, [socket]);
+  }, [socket, currentRoom]);
 
   const startTyping = useCallback(() => {
     if (socket) {
@@ -147,6 +183,26 @@ export const useSocket = () => {
     }
   }, [socket]);
 
+  const joinRoom = useCallback((roomName: string) => {
+    if (socket) {
+      setRoomError(null);
+      socket.emit('joinRoom', { roomName });
+    }
+  }, [socket]);
+
+  const leaveRoom = useCallback((roomName: string) => {
+    if (socket) {
+      setRoomError(null);
+      socket.emit('leaveRoom', { roomName });
+    }
+  }, [socket]);
+
+  const switchRoom = useCallback((roomName: string) => {
+    if (subscribedRooms.includes(roomName)) {
+      setCurrentRoom(roomName);
+    }
+  }, [subscribedRooms]);
+
   return {
     socket,
     isConnected,
@@ -155,12 +211,18 @@ export const useSocket = () => {
     typingUsers,
     user,
     loginError,
+    subscribedRooms,
+    currentRoom,
+    roomError,
     login,
     adminLogin,
     adminBroadcast,
     logout,
     sendMessage,
     startTyping,
-    stopTyping
+    stopTyping,
+    joinRoom,
+    leaveRoom,
+    switchRoom
   };
 };
