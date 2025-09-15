@@ -3,6 +3,7 @@ export interface User {
   username: string;
   room: string;
   joinedAt: number;
+  isAdmin: boolean;
 }
 
 export interface Room {

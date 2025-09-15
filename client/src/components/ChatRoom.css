@@ -29,7 +29,7 @@
   font-size: 0.9rem;
 }
 
-.leave-button {
+.logout-button {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -40,8 +40,92 @@
   transition: background-color 0.3s;
 }
 
-.leave-button:hover {
+.logout-button:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+.admin-panel {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.admin-panel h3 {
+  margin: 0 0 0.75rem 0;
+  color: #856404;
+  font-size: 1rem;
+}
+
+.broadcast-form {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.broadcast-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.broadcast-input:focus {
+  border-color: #856404;
+}
+
+.broadcast-button {
+  padding: 0.5rem 1rem;
+  background: #856404;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: opacity 0.3s;
+}
+
+.broadcast-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.broadcast-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.notification-message {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  border-left: 4px solid #e91e63;
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.notification-label {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.notification-content {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  font-weight: 500;
 }
 
 .messages-container {
